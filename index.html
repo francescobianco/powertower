@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatrice Classica con Funzioni Avanzate</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .calculator {
+            width: 320px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f8f8f8;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #display {
+            width: 100%;
+            padding: 15px 10px;
+            font-size: 1.5em;
+            text-align: right;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        button {
+            padding: 15px 0;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #d0d0d0;
+        }
+        button.operator {
+            background-color: #ff9800;
+            color: white;
+        }
+        button.operator:hover {
+            background-color: #e68a00;
+        }
+        button.special {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button.special:hover {
+            background-color: #45a049;
+        }
+        button.equals {
+            background-color: #2196F3;
+            color: white;
+        }
+        button.equals:hover {
+            background-color: #1e88e5;
+        }
+        button.clear {
+            background-color: #f44336;
+            color: white;
+        }
+        button.clear:hover {
+            background-color: #e53935;
+        }
+        .tetration-symbol {
+            position: relative;
+            display: inline-block;
+        }
+        .tetration-symbol sup {
+            position: absolute;
+            top: -0.6em;
+            left: -0.3em;
+            font-size: 0.7em;
+        }
+        .root-symbol {
+            position: relative;
+        }
+        .root-symbol sup {
+            position: absolute;
+            top: -0.5em;
+            left: 0;
+            font-size: 0.7em;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" id="display" readonly>
+        <div class="buttons">
+            <button class="clear" onclick="clearAll()">C</button>
+            <button class="clear" onclick="clearEntry()">CE</button>
+            <button onclick="backspace()">⌫</button>
+            <button class="operator" onclick="appendToDisplay('/')">/</button>
+            
+            <button onclick="appendToDisplay('7')">7</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('9')">9</button>
+            <button class="operator" onclick="appendToDisplay('*')">×</button>
+            
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('6')">6</button>
+            <button class="operator" onclick="appendToDisplay('-')">-</button>
+            
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('3')">3</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            
+            <button onclick="appendToDisplay('0')" style="grid-column: span 2;">0</button>
+            <button onclick="appendToDisplay('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+            
+            <button class="special" onclick="setOperation('^')">^</button>
+            <button class="special" onclick="setOperation('tetrazione')">
+                <span class="tetration-symbol"><sup>b</sup>a</span>
+            </button>
+            <button class="special" onclick="setOperation('radice')">
+                <span class="root-symbol"><sup>n</sup>√</span>
+            </button>
+            <button class="operator" onclick="toggleSign()">±</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentNumber = '';
+        let firstNumber = null;
+        let operation = null;
+        let waitingForSecondNumber = false;
+        
+        function updateDisplay(value) {
+            document.getElementById('display').value = value;
+        }
+        
+        function appendToDisplay(value) {
+            if (waitingForSecondNumber) {
+                currentNumber = value;
+                waitingForSecondNumber = false;
+            } else {
+                currentNumber = currentNumber === '0' ? value : currentNumber + value;
+            }
+            updateDisplay(currentNumber);
+        }
+        
+        function clearEntry() {
+            currentNumber = '0';
+            updateDisplay(currentNumber);
+        }
+        
+        function clearAll() {
+            currentNumber = '0';
+            firstNumber = null;
+            operation = null;
+            waitingForSecondNumber = false;
+            updateDisplay(currentNumber);
+        }
+        
+        function backspace() {
+            if (currentNumber.length > 1) {
+                currentNumber = currentNumber.slice(0, -1);
+            } else {
+                currentNumber = '0';
+            }
+            updateDisplay(currentNumber);
+        }
+        
+        function toggleSign() {
+            currentNumber = (parseFloat(currentNumber) * -1).toString();
+            updateDisplay(currentNumber);
+        }
+        
+        function setOperation(op) {
+            if (firstNumber === null) {
+                firstNumber = parseFloat(currentNumber);
+                operation = op;
+                waitingForSecondNumber = true;
+            } else if (operation) {
+                calculate();
+                firstNumber = parseFloat(currentNumber);
+                operation = op;
+                waitingForSecondNumber = true;
+            }
+        }
+        
+        function calcolaTetrazione(base, altezza) {
+            if (altezza <= 0) return 1;
+            if (altezza === 1) return base;
+            
+            let risultato = base;
+            for (let i = 1; i < altezza; i++) {
+                risultato = Math.pow(base, risultato);
+                if (!isFinite(risultato) || risultato > 1e100) return Infinity;
+            }
+            return risultato;
+        }
+        
+        function calculate() {
+            if (firstNumber === null || operation === null) return;
+            
+            const secondNumber = parseFloat(currentNumber);
+            let result;
+            
+            try {
+                switch (operation) {
+                    case '+':
+                        result = firstNumber + secondNumber;
+                        break;
+                    case '-':
+                        result = firstNumber - secondNumber;
+                        break;
+                    case '*':
+                        result = firstNumber * secondNumber;
+                        break;
+                    case '/':
+                        if (secondNumber === 0) throw new Error("Divisione per zero!");
+                        result = firstNumber / secondNumber;
+                        break;
+                    case '^':
+                        result = Math.pow(firstNumber, secondNumber);
+                        break;
+                    case 'tetrazione':
+                        if (secondNumber > 4) throw new Error("Per sicurezza, la tetrazione è limitata a un'altezza di 4!");
+                        result = calcolaTetrazione(firstNumber, secondNumber);
+                        break;
+                    case 'radice':
+                        if (secondNumber === 0) throw new Error("L'indice non può essere zero!");
+                        if (firstNumber < 0 && secondNumber % 2 === 0) {
+                            throw new Error("Non è possibile calcolare una radice di indice pari per un numero negativo!");
+                        }
+                        result = Math.pow(firstNumber, 1/secondNumber);
+                        break;
+                    default:
+                        return;
+                }
+                
+                if (!isFinite(result)) {
+                    currentNumber = '∞';
+                } else {
+                    // Arrotonda a 10 cifre decimali per evitare problemi di precisione
+                    result = parseFloat(result.toFixed(10));
+                    currentNumber = result.toString();
+                }
+                
+                firstNumber = null;
+                operation = null;
+                updateDisplay(currentNumber);
+                
+            } catch (error) {
+                alert(error.message);
+                clearAll();
+            }
+        }
+        
+        // Inizializza il display
+        clearAll();
+        
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            if (/[0-9.]/.test(key)) {
+                appendToDisplay(key);
+                event.preventDefault();
+            } else if (['+', '-', '*', '/'].includes(key)) {
+                appendToDisplay(key);
+                event.preventDefault();
+            } else if (key === '^') {
+                setOperation('^');
+                event.preventDefault();
+            } else if (key === 'Enter') {
+                calculate();
+                event.preventDefault();
+            } else if (key === 'Escape') {
+                clearAll();
+                event.preventDefault();
+            } else if (key === 'Backspace') {
+                backspace();
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
